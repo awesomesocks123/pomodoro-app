@@ -8,10 +8,16 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 200,
     height: 200,
+    maxHeight: 200,
+    maxWidth: 200,
+    minHeight: 200,
+    minWidth: 200,
     show: false,
     autoHideMenuBar: true,
-    transparent: true,
     frame: false,
+    roundedCorners: true,
+    transparent: true,
+    alwaysOnTop: true,
 
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -19,6 +25,15 @@ function createWindow() {
       sandbox: false
     }
   })
+
+  // Boost the window level as high as possible
+  mainWindow.setAlwaysOnTop(true, 'screen-saver')
+
+  // Make it visible across all Spaces (including fullscreen apps)
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+
+  // Prevent it from trying to fullscreen itself
+  mainWindow.fullScreenable = false
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -61,6 +76,13 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  ipcMain.on('close-window', () => {
+    const currentWindow = BrowserWindow.getFocusedWindow()
+    if (currentWindow) {
+      currentWindow.close()
+    }
   })
 })
 
